@@ -63,6 +63,7 @@ Plus **Arabic normalization** (collapse `أ إ آ → ا`, drop diacritics) on b
 and your input, so what you *type* (`ازيك`) matches what it *learned* (`إزيك`).
 
 ## Example
+<img width="1180" height="532" alt="malak_term" src="https://github.com/user-attachments/assets/756fd4cb-cdfb-402e-a0d5-8b6f09e17420" />
 
 ```
 انت : ازيك
