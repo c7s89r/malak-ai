@@ -1,0 +1,16 @@
+.DS_Store
+.idea
+.ipynb_checkpoints/
+.vscode
+__pycache__/
+*.bin
+*.pkl
+*.pt
+*.pyc
+input.txt
+env/
+venv/
+# malak-ai: local training outputs and editor/agent state
+.claude/
+out-egyptian/
+*.log
