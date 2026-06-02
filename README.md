@@ -9,6 +9,7 @@ Masry — one tidy line at a time. No garbage, no stutter, no mixed-up words.
 > الموديل ده بيتكلم مصري! اسأله "ازيك" أو "عاصمة مصر ايه" وهيرد عليك على طول.
 
 Made by **[@c7s89r](https://github.com/c7s89r)** and **[@p8oz](https://github.com/p8oz)**.
+<img width="1936" height="905" alt="train" src="https://github.com/user-attachments/assets/723237a5-e158-460d-968a-b557875b0449" />
 
 ---
 
