@@ -1,7 +1,7 @@
 # Egyptian-Arabic (Masry) chat dataset
 
 A small **character-level** chat dataset in everyday Egyptian dialect, in the
-`<user>` / `<assistant>` turn format, built for nanoGPT.
+`<user>` / `<assistant>` turn format. This is what malak trains on.
 
 ## Generate
 

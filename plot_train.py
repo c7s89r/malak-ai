@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Draw an annotated train.png from the CSV that train.py logs.
-
-Usage:
-    python plot_train.py --out_dir=out-egyptian
-
-Produces:  <out_dir>/train.png   and a copy at  ./train.png
-A two-panel figure:
-  LEFT  : the training & validation loss curves, with each line/region explained.
-  RIGHT : a legend that explains, line by line, what the plot is telling you.
-"""
+# makes the train.png graph from the loss numbers train.py wrote down.
+# left side = the loss going down. right side = a little cheat-sheet telling
+# you what every line/color means so you're not just staring at squiggles.
+# run: python plot_train.py --out_dir=out-egyptian
 import os
 import sys
 import csv
@@ -17,7 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# --- tiny arg parse: --out_dir=... ---
+# grab --out_dir if you passed one
 out_dir = "out-egyptian"
 for a in sys.argv[1:]:
     if a.startswith("--out_dir="):
@@ -42,11 +35,11 @@ fig, (ax, ax_txt) = plt.subplots(
     1, 2, figsize=(15, 7), gridspec_kw={"width_ratios": [3, 2]}
 )
 
-# ---------------- left panel: the curves ----------------
+# left side: the actual graph
 ax.plot(iters, train_loss, color="#1f77b4", lw=2, marker="o", ms=3, label="train loss")
 ax.plot(iters, val_loss, color="#d62728", lw=2, marker="s", ms=3, label="val loss")
 
-# mark the best validation point
+# star on the best spot (lowest val = best brain)
 ax.scatter([best_i], [best_val], color="green", zorder=5, s=90, marker="*")
 ax.annotate(
     f"best val = {best_val:.3f}\n(checkpoint saved here)",
@@ -56,7 +49,7 @@ ax.annotate(
     color="green", fontsize=9,
 )
 
-# annotate the start (random model) and end
+# point at where it started (knows nothing yet)
 ax.annotate(
     "start: random weights\n(loss ≈ ln(vocab_size))",
     xy=(iters[0], train_loss[0]),
@@ -65,7 +58,7 @@ ax.annotate(
     fontsize=9, color="gray",
 )
 
-# shade the warmup region (first 100 iters per config)
+# color in the warmup bit at the start
 warmup = 100
 ax.axvspan(0, warmup, color="orange", alpha=0.12)
 ax.text(warmup / 2, max(train_loss) * 0.97, "lr\nwarmup", ha="center",
@@ -77,7 +70,7 @@ ax.set_title("Egyptian-Arabic baby GPT — training curve", fontsize=13, weight=
 ax.legend(loc="upper right", fontsize=10)
 ax.grid(True, alpha=0.3)
 
-# ---------------- right panel: line-by-line explanation ----------------
+# right side: the cheat-sheet text
 ax_txt.axis("off")
 explanation = (
     "HOW TO READ THIS PLOT (line by line)\n"

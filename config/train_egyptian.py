@@ -1,12 +1,12 @@
-# train a miniature character-level Egyptian-Arabic chat model
-# good for debugging and playing on a single GPU / macbook
+# the malak settings. tiny char-level egyptian chatbot.
+# runs fine on one gpu, even a laptop tbh
 
 out_dir = 'out-egyptian'
-eval_interval = 100   # eval often so the train.png curve is smooth
+eval_interval = 100   # check loss this often, keeps the train.png graph smooth
 eval_iters = 100
 log_interval = 10
 
-# small dataset -> we expect to overfit, so only save when val improves
+# data's small so it'll overfit eventually -> only save when val actually drops
 always_save_checkpoint = False
 
 wandb_log = False
@@ -16,22 +16,22 @@ wandb_run_name = 'mini-masry-gpt'
 dataset = 'egyptian'
 gradient_accumulation_steps = 1
 batch_size = 64
-block_size = 256  # context of up to 256 previous characters (a few turns)
+block_size = 256  # how many chars back it can "see" (~a couple turns)
 
-# baby GPT model :)
+# the actual model. small on purpose
 n_layer = 6
 n_head = 6
 n_embd = 384
 dropout = 0.2
 
-learning_rate = 1e-3  # with baby networks we can afford a bit higher
+learning_rate = 1e-3  # small net so we can push the lr a bit
 max_iters = 3000
-lr_decay_iters = 3000  # usually == max_iters
+lr_decay_iters = 3000  # keep == max_iters
 min_lr = 1e-4
-beta2 = 0.99  # a bit bigger because tokens per iter is small
+beta2 = 0.99  # bumped up since each step sees few tokens
 
 warmup_iters = 100
 
-# if you are on CPU (no GPU) uncomment these:
+# no gpu? uncomment these two and go make tea, it'll be slow
 # device = 'cpu'
 # compile = False

@@ -246,7 +246,7 @@ if wandb_log and master_process:
     import wandb
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
-# CSV loss log (used to draw train.png). One row per eval: iter,train_loss,val_loss
+# jot the loss numbers into a csv so plot_train.py can draw the graph later
 loss_log_path = os.path.join(out_dir, 'loss_log.csv')
 if master_process:
     with open(loss_log_path, 'w') as f:

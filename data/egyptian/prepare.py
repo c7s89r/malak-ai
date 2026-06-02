@@ -1,48 +1,34 @@
 # -*- coding: utf-8 -*-
-"""
-Prepare an Egyptian-Arabic (Masry) chat dataset for character-level language modeling.
-
-We build a synthetic dataset of <user>/<assistant> conversation turns written in
-everyday Egyptian dialect, then map every character to an integer (char-level), exactly
-like nanoGPT's shakespeare_char example. We save:
-    - input.txt   : the raw human-readable dataset (so you can inspect it)
-    - train.bin    : training token ids   (uint16)
-    - val.bin      : validation token ids (uint16)
-    - meta.pkl     : vocab + stoi/itos so sample.py can decode
-
-Format of every example (each conversation is one "block"):
-    <user> <the question in egyptian>
-    <assistant> <the reply in egyptian>
-
-Blocks are separated by a blank line. The model learns to emit "<assistant> ..."
-right after it sees "<user> ...". You can change how many conversations are generated
-with the env var N_CONVOS (default 10000). Try 50000-60000 once it works.
-"""
+# this is where malak's brain comes from. we fake a bunch of egyptian
+# user/bot chats, smash every char into a number (char-level, same as the
+# tiny shakespeare demo) and dump train.bin / val.bin / meta.pkl.
+# every chat looks like:
+#   <user> <something in masry>
+#   <assistant> <the reply>
+# bump N_CONVOS if you want more data (10k is plenty to test, go 50-60k later)
 import os
 import pickle
 import random
 import numpy as np
 
-# --- Arabic normalization so the way people TYPE matches what the model learns.
-# Collapse the alef/hamza forms to a plain alef and drop diacritics. This makes
-# "ازيك" and "إزيك" identical to the model, which hugely improves intent matching.
+# make all the alef/hamza shapes the same and kill the little marks.
+# why: people type "ازيك" but the data might have "إزيك" — to the model
+# those are different words. flatten em so it actually understands you.
 _TASHKEEL = "ًٌٍَُِّْـ"
 _ALEF_MAP = str.maketrans("أإآٱ", "اااا")
 def normalize_ar(s):
     s = s.translate(_ALEF_MAP)
     return "".join(c for c in s if c not in _TASHKEEL)
 
-# how many conversations to generate (start small to confirm it works, then scale up)
+# how many chats to cook up. start small, scale up once it works
 N_CONVOS = int(os.environ.get("N_CONVOS", "10000"))
 SEED = int(os.environ.get("SEED", "1337"))
 random.seed(SEED)
 
 here = os.path.dirname(__file__)
 
-# -----------------------------------------------------------------------------
-# Building blocks: slots we fill into templates so we get lots of variety.
-# Everything is authentic everyday Egyptian (Masry).
-# -----------------------------------------------------------------------------
+# word banks we shuffle into the replies so it's not the same line over and over.
+# all normal everyday masry stuff
 NAMES = ["أحمد", "محمد", "يوسف", "علي", "كريم", "عمر", "مصطفى", "خالد", "حسن",
          "منى", "سارة", "نور", "هبة", "ياسمين", "مريم", "دينا", "إسراء", "فاطمة"]
 
@@ -61,10 +47,8 @@ JOBS = ["مهندس", "دكتور", "مدرس", "محاسب", "مبرمج", "ط�
 SUBJECTS = ["الرياضيات", "الفيزياء", "اللغة العربية", "التاريخ", "الكيمياء",
             "الإنجليزي", "الأحياء", "البرمجة"]
 
-# -----------------------------------------------------------------------------
-# Intent templates. Each entry is (list_of_user_phrasings, function->assistant_reply)
-# The {slot} placeholders are filled from the lists above.
-# -----------------------------------------------------------------------------
+# each entry = (ways the user might say it, function that spits a reply).
+# the f-strings just drop a random food/city/whatever into the answer.
 def pick(lst):
     return random.choice(lst)
 
@@ -109,10 +93,9 @@ INTENTS.append((
 def _from_user():
     return pick(["إنت منين؟", "بتتكلم لهجة إيه؟", "إنت من مصر؟", "إنت بلدك إيه؟"])
 INTENTS.append((
-    [None],  # uses function below
+    [None],  # ignore this, overwriting it right below lol
     None,
 ))
-# replace the placeholder we just added with a proper city intent
 INTENTS[-1] = (
     ["إنت منين؟", "إنت من أنهي محافظة؟", "ساكن فين؟", "إنت من مصر؟"],
     lambda: pick([
@@ -253,9 +236,7 @@ INTENTS.append((
     ]),
 ))
 
-# -----------------------------------------------------------------------------
-# Generate the conversations
-# -----------------------------------------------------------------------------
+# ok now actually build the chats
 def gen_block():
     users, reply_fn = pick(INTENTS)
     u = pick(users)
@@ -265,18 +246,16 @@ def gen_block():
 blocks = [gen_block() for _ in range(N_CONVOS)]
 random.shuffle(blocks)
 data = "\n".join(blocks) + "\n"
-data = normalize_ar(data)  # canonical spelling -> robust matching + smaller vocab
+data = normalize_ar(data)  # flatten spelling here too, also shrinks the vocab
 
-# save the human-readable version so you can read what was generated
+# drop the readable version so you can eyeball what came out
 with open(os.path.join(here, "input.txt"), "w", encoding="utf-8") as f:
     f.write(data)
 
 print(f"generated {N_CONVOS:,} conversations")
 print(f"length of dataset in characters: {len(data):,}")
 
-# -----------------------------------------------------------------------------
-# char-level tokenization
-# -----------------------------------------------------------------------------
+# turn every unique char into a number. that's the whole "tokenizer"
 chars = sorted(list(set(data)))
 vocab_size = len(chars)
 print(f"vocab size: {vocab_size:,}")
@@ -288,7 +267,7 @@ itos = {i: ch for i, ch in enumerate(chars)}
 def encode(s):
     return [stoi[c] for c in s]
 
-# train/val split
+# 90% to learn from, 10% held back to check it's not just memorizing
 n = len(data)
 train_data = data[: int(n * 0.9)]
 val_data = data[int(n * 0.9):]
